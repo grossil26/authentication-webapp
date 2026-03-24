@@ -1,5 +1,4 @@
-# authentication-webapp-project
-
+# MICAC SoA 2026: C&D
 
 
 ## Getting started
