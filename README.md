@@ -3,9 +3,13 @@
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+In this project, we will develop one scanner utilizing 3 tools:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+* Stateful Authentication (Form-based and Cookies)
+* Stateless Authentication (JWT - JSON Web Tokens)
+* Federated/Delegated Authentication (OAuth 2.0 / OIDC)
+
+The aim of this project is to target specific types of vulnerabilities such as: Lack of signature in JWT’s to exposing client secrets in the OAuth2.0
 
 ## Add your files
 
