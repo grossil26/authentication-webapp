@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 def get_cli_arguments():
-    print("\n[*] Initializing Command-Line Argument Parser...")
+    print("\nInitializing Command-Line Argument Parser...")
     parser = argparse.ArgumentParser(description="Stateful Authentication Module")
 
     parser.add_argument('--url', required=True, help="Target login URL")
@@ -25,21 +25,21 @@ def get_cli_arguments():
     }
 
 def authenticate(config):
-    print("[*] Initializing stateful session (Cookie Jar)...")
+    print("Initializing stateful session (Cookie Jar)...")
     session = requests.Session()
 
-    print(f"[*] Visiting {config['login_url']} to extract the CSRF token...")
+    print(f"Visiting {config['login_url']} to extract the CSRF token...")
     response = session.get(config['login_url'])
 
     soup = BeautifulSoup(response.text, 'html.parser')
     token_input = soup.find('input', {'name': config['csrf_field']})
 
     if not token_input:
-        print("[-] Error: Could not find the CSRF token on the page!")
+        print("Error: Could not find the CSRF token on the page!")
         return None
 
     csrf_token = token_input.get('value')
-    print(f"[+] Found hidden CSRF Token: {csrf_token}")
+    print(f"Found hidden CSRF Token: {csrf_token}")
 
     login_data = {
         config['user_field']: config['username'],
@@ -48,14 +48,14 @@ def authenticate(config):
         'Login': 'Login'
     }
 
-    print("[*] Submitting login credentials and token...")
+    print("Submitting login credentials and token...")
     login_response = session.post(config['login_url'], data=login_data)
 
     if "Welcome to Damn Vulnerable Web Application" in login_response.text or "index.php" in login_response.url:
-        print("[SUCCESS] Authentication Successful! The session is active.")
+        print("Authentication Successful! The session is active.")
         return session
     else:
-        print("[-] Authentication Failed. Check credentials.")
+        print("Authentication Failed. Check credentials.")
         return None
 
 if __name__ == "__main__":
@@ -63,4 +63,4 @@ if __name__ == "__main__":
     active_session = authenticate(target_config)
 
     if active_session:
-        print(f"[*] Current Session Cookies: {active_session.cookies.get_dict()}")
+        print(f"Current Session Cookies: {active_session.cookies.get_dict()}")
