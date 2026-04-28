@@ -1,0 +1,66 @@
+import argparse
+import requests
+from bs4 import BeautifulSoup
+
+def get_cli_arguments():
+    print("\n[*] Initializing Command-Line Argument Parser...")
+    parser = argparse.ArgumentParser(description="Stateful Authentication Module")
+
+    parser.add_argument('--url', required=True, help="Target login URL")
+    parser.add_argument('--user', required=True, help="Username to inject")
+    parser.add_argument('--password', required=True, help="Password to inject")
+    parser.add_argument('--user-field', required=True, help="HTML name attribute for username")
+    parser.add_argument('--pass-field', required=True, help="HTML name attribute for password")
+    parser.add_argument('--csrf-field', required=True, help="HTML name attribute for CSRF token")
+
+    args = parser.parse_args()
+
+    return {
+        'login_url': args.url,
+        'username': args.user,
+        'password': args.password,
+        'user_field': args.user_field,
+        'pass_field': args.pass_field,
+        'csrf_field': args.csrf_field
+    }
+
+def authenticate(config):
+    print("[*] Initializing stateful session (Cookie Jar)...")
+    session = requests.Session()
+
+    print(f"[*] Visiting {config['login_url']} to extract the CSRF token...")
+    response = session.get(config['login_url'])
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    token_input = soup.find('input', {'name': config['csrf_field']})
+
+    if not token_input:
+        print("[-] Error: Could not find the CSRF token on the page!")
+        return None
+
+    csrf_token = token_input.get('value')
+    print(f"[+] Found hidden CSRF Token: {csrf_token}")
+
+    login_data = {
+        config['user_field']: config['username'],
+        config['pass_field']: config['password'],
+        config['csrf_field']: csrf_token,
+        'Login': 'Login'
+    }
+
+    print("[*] Submitting login credentials and token...")
+    login_response = session.post(config['login_url'], data=login_data)
+
+    if "Welcome to Damn Vulnerable Web Application" in login_response.text or "index.php" in login_response.url:
+        print("[SUCCESS] Authentication Successful! The session is active.")
+        return session
+    else:
+        print("[-] Authentication Failed. Check credentials.")
+        return None
+
+if __name__ == "__main__":
+    target_config = get_cli_arguments()
+    active_session = authenticate(target_config)
+
+    if active_session:
+        print(f"[*] Current Session Cookies: {active_session.cookies.get_dict()}")
