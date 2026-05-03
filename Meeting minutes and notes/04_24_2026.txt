@@ -1,8 +1,0 @@
-24th of April 2026
-
-1) Agreed work subdivision:
-    - Lorenzo: Stateful Authentication
-    - Haneen: Stateless Authentication
-    - Matej: Federated/Delegated Authentication
-
-2) Agreed new meeting for the 30th of April. Each member shall push commits on GIT about his part and produce a report to be reiviewed by the other peers to confirm his work or suggest enhancements.
