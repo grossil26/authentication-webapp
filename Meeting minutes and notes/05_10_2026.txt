@@ -1,0 +1,14 @@
+10th of May 2026
+
+- Read and discussed the peer reviews and the professor's comments
+
+- Divided the work to update the project state of progress:
+    1) Matej: fix hardcoding and src
+    2) Lorenzo: update meeting minutes section, schedule work for next weeks, update unclear instructions for the tool practical use
+    3) Haneen: update the Readme.md with the work done so far
+
+Next week:
+- Harmonize the three modules in a unique tool
+
+Following week:
+- Update the overleaf according to the new harmonized tool and harmonize the Readme, keeping peer reviews into consideration
