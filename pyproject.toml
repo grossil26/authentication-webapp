@@ -5,6 +5,7 @@ description = "Project for Security of Aplications by Cats and Dogs"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "beautifulsoup4>=4.14.3",
     "mitmproxy>=12.2.2",
     "requests>=2.33.1",
 ]
