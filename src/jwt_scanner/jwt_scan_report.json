@@ -1,0 +1,51 @@
+{
+  "target": "https://0a1000ec04aa75e882313d2d008b00eb.web-security-academy.net",
+  "protected_endpoint": "/admin",
+  "timestamp": "2026-05-11T10:54:14.489602",
+  "results": [
+    {
+      "vulnerability": "alg: none Bypass",
+      "severity": "CRITICAL",
+      "vulnerable": false
+    },
+    {
+      "vulnerability": "Missing Signature",
+      "severity": "CRITICAL",
+      "vulnerable": false
+    },
+    {
+      "vulnerability": "Weak Secret Bruteforce",
+      "severity": "MEDIUM",
+      "vulnerable": false
+    },
+    {
+      "vulnerability": "jwk Injection",
+      "severity": "CRITICAL",
+      "vulnerable": true
+    },
+    {
+      "vulnerability": "jku Injection",
+      "severity": "HIGH",
+      "vulnerable": false
+    },
+    {
+      "vulnerability": "kid Path Traversal",
+      "severity": "CRITICAL",
+      "vulnerable": false
+    },
+    {
+      "vulnerability": "Algorithm Confusion",
+      "severity": "CRITICAL",
+      "vulnerable": false
+    },
+    {
+      "vulnerability": "SQL Injection via kid",
+      "severity": "HIGH",
+      "vulnerable": false
+    }
+  ],
+  "summary": {
+    "total_vulnerable": 1,
+    "total_tests": 8
+  }
+}
