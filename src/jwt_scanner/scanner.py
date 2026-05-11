@@ -145,7 +145,7 @@ class JWTScanner:
                     tok = v['token']
                     if self.is_jwt_format(tok):
                         return tok
-        except:
+        except Exception:
             pass
 
         if 'Authorization' in response.headers:
@@ -392,7 +392,7 @@ class JWTScanner:
                             public_key_data = data['keys'][0]
                             self.log(f"Found JWKS at {endpoint}", "INFO")
                             break
-                except:
+                except Exception:
                     continue
             if public_key_data and 'n' in public_key_data:
                 n_bytes = self.b64url_decode(public_key_data['n'])

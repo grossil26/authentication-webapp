@@ -1,7 +1,7 @@
 {
-  "target": "https://0aff009d0446047e84509b2400a50048.web-security-academy.net",
+  "target": "https://0a1000ec04aa75e882313d2d008b00eb.web-security-academy.net",
   "protected_endpoint": "/admin",
-  "timestamp": "2026-05-10T15:45:39.679573",
+  "timestamp": "2026-05-11T10:54:14.489602",
   "results": [
     {
       "vulnerability": "alg: none Bypass",

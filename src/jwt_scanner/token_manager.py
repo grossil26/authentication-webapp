@@ -7,7 +7,7 @@ Separate from main scanner for better code organization
 import time
 import json
 import base64
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 from datetime import datetime
 
 
@@ -106,13 +106,13 @@ class TokenManager:
                 'has_expiry': 'exp' in payload
             }
         
-        # Log token info (will be printed by scanner, but keep for direct use)
+        # Log token info
         if self.expiry_time:
             expires_in = self.expiry_time - self.token_obtained_time
             expires_minutes = expires_in / 60
             print(f"[TokenManager] Token set. Expires in {expires_minutes:.1f} minutes")
         else:
-            print(f"[TokenManager] Token set. No expiry info available")
+            print("[TokenManager] Token set. No expiry info available")
         
         return True
     
@@ -169,10 +169,10 @@ class TokenManager:
             new_token = self.scanner_callback()
             
             if new_token and self.set_token(new_token):
-                print(f"[TokenManager] Token refreshed successfully")
+                print("[TokenManager] Token refreshed successfully")
                 return True
             else:
-                print(f"[TokenManager] Failed to refresh token")
+                print("[TokenManager] Failed to refresh token")
                 return False
                 
         except Exception as e:
@@ -226,9 +226,11 @@ class TokenManager:
         print("[TokenManager] Token cleared")
 
 
-# For testing the token manager independently
+# ----------------------------------------------------------------------
+# The code below runs ONLY when this script is executed directly
+# (e.g., `python token_manager.py`), NOT when imported by scanner.py
+# ----------------------------------------------------------------------
 if __name__ == "__main__":
-    # Test the TokenManager class
     print("Testing TokenManager...")
     
     # Mock authentication function for testing

