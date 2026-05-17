@@ -1,0 +1,11 @@
+12th of May 2026
+
+Acknowledged final submission and presentation dates, we scheduled next weeks work accordingly:
+
+This week:
+    - Matej: Harmonization of the modules, production of a diagram for his module, updates his own module report
+    - Haneen: Read.me, updates tables, updates her own module report 
+    - Lorenzo: Harmonization of the Overleaf report, add peers' updates
+
+Next week:
+    - Matej, Haneen, Lorenzo: slides and tutorial for the presentation.
