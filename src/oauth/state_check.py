@@ -28,7 +28,7 @@ class StateCheck:
         if "response_type" in flow.request.query and "client_id" in flow.request.query:
             if "state" not in flow.request.query:
                 print(f"\n{'='*20}")
-                print(f"Security Warning: Missing 'state' parameter!")
+                print("Security Warning: Missing 'state' parameter!")
                 print(f"Target: {flow.request.host}")
                 print(f"{'='*20}\n")
 

