@@ -1,0 +1,11 @@
+25th May 2026
+
+Meeting for discussing state of the work before submission:
+
+- Approved harmonization proposal and push the last harmonization commits: Lorenzo worked on authentication (both stateful and      stateless) handling; Haneen worked on harmonizing her scanner with the authentication module; Matej worked on the harmonized main.py file.
+
+- Review of the Overleaf report to check coherence and consistency with the harmonized tool.
+
+- Last reviews of the required tasks before sumbmitting (finalize Readme, slides, instructions.txt and demo)
+
+By the 1st of June slides, instructions.txt and demo will be completed by the group members together.
