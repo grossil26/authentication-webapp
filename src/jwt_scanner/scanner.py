@@ -5,7 +5,6 @@ Tests 8 Critical JWT Vulnerabilities (fully implemented)
 MODIFIED: Receives authenticated session + JWT from external auth handler
 """
 
-import argparse
 import base64
 import json
 import hmac
