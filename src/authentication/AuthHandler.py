@@ -8,32 +8,14 @@ extracts necessary tokens (like CSRF), and returns an authenticated requests.Ses
 object and the extracted JSON Web Token (JWT) to be utilized by downstream vulnerability scanners.
 """
 
-# ============================================================
-# PATH SETUP - Allow importing from sibling folders
-# ============================================================
-import sys
-import os
 import re
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional, Tuple
 
-# Get the absolute path of the current file's directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
+# Simple relative import - assumes proper package structure
+from ..jwt_scanner.scanner import JWTScanner
 
-# Get the parent directory (src folder)
-parent_dir = os.path.dirname(current_dir)
-
-# Add the parent directory to Python path so we can import from jwt_scanner folder
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
-    print(f"[*] Added to path: {parent_dir}")
-
-# Also add the current directory to be safe
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-
-# ============================================================
 
 class AuthHandler:
     """
@@ -103,19 +85,19 @@ class AuthHandler:
         self.pass_field = pass_field
         self.csrf_field = csrf_field
         self.success_string = success_string
-        
+
         # Handle token_fields - could be string or list
         if isinstance(token_fields, str):
             self.token_fields = token_fields.split(',')
         else:
             self.token_fields = token_fields
-            
+
         self.token = token
         self.session = None
-        
+
         # Mode flag (set by main.py based on which command is called)
         self.scan_mode = scan_mode
-        
+
         # Scanner parameters
         self.target = target
         self.protected_endpoint = protected_endpoint
@@ -135,13 +117,13 @@ class AuthHandler:
         mode_text = "AUTHENTICATION + JWT SCANNING" if self.scan_mode else "AUTHENTICATION ONLY"
         print("\n" + "="*70)
         print(f"RUNNING IN {mode_text} MODE")
-        print("="*70)
-        
+        print(f"{'='*70}")
+
         # Validate required parameters for authentication
         if not self.auth_type:
             print("[ERROR] auth_type is required (form, basic, json, bearer)")
             return None, None
-            
+
         if self.auth_type != 'bearer':
             if not self.login_url:
                 print(f"[ERROR] login_url is required for {self.auth_type} authentication")
@@ -152,16 +134,16 @@ class AuthHandler:
             if not self.password:
                 print(f"[ERROR] password is required for {self.auth_type} authentication")
                 return None, None
-        
+
         print(f"\n[*] Initializing stateful session (Strategy: {self.auth_type.upper()})...")
-        
+
         active_session, extracted_token = self.authenticate()
 
         if active_session:
             print(f"[*] Current Session Cookies: {active_session.cookies.get_dict()}")
             if extracted_token:
                 print(f"[*] Extracted JWT Token: {extracted_token[:50]}...")
-            
+
             # Only run scanner if in scan_mode
             if self.scan_mode:
                 if self.target and self.protected_endpoint:
@@ -173,7 +155,7 @@ class AuthHandler:
             else:
                 print("\n[*] Authentication completed successfully!")
                 print("[*] Use 'jwt_scanner' command for full vulnerability scanning")
-            
+
             return active_session, extracted_token
         else:
             print("\n[FAILED] Authentication failed!")
@@ -197,7 +179,7 @@ class AuthHandler:
 
     def _do_form_login(self) -> Tuple[Optional[requests.Session], Optional[str]]:
         """Handles standard HTML forms with CSRF tokens.
-        
+
         Returns:
             Tuple[Optional[requests.Session], Optional[str]]: Authenticated session and extracted JWT token.
         """
@@ -265,7 +247,7 @@ class AuthHandler:
 
     def _do_basic_login(self) -> Tuple[Optional[requests.Session], Optional[str]]:
         """Handles HTTP Basic Authentication (browser pop-ups).
-        
+
         Returns:
             Tuple[Optional[requests.Session], Optional[str]]: Authenticated session and extracted JWT token.
         """
@@ -301,7 +283,7 @@ class AuthHandler:
 
     def _do_json_login(self) -> Tuple[Optional[requests.Session], Optional[str]]:
         """Handles modern API authentication sending application/json.
-        
+
         Returns:
             Tuple[Optional[requests.Session], Optional[str]]: Authenticated session and extracted JWT token.
         """
@@ -342,12 +324,12 @@ class AuthHandler:
 
     def _do_bearer_login(self) -> Tuple[Optional[requests.Session], Optional[str]]:
         """Handles pre-existing bearer token authentication.
-        
+
         Returns:
             Tuple[Optional[requests.Session], Optional[str]]: Session with bearer token and the token itself.
         """
         print("[*] Using provided bearer token")
-        
+
         if self.token and self._is_jwt_format(self.token):
             print("[SUCCESS] Valid JWT token provided")
             self.session.headers.update({'Authorization': f'Bearer {self.token}'})
@@ -398,7 +380,7 @@ class AuthHandler:
         matches = re.findall(r'eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}', response.text)
         if matches:
             return matches[0]
-        
+
         return None
 
     @staticmethod
@@ -416,20 +398,19 @@ class AuthHandler:
         print("="*70)
 
         try:
-            # Import from jwt_scanner folder
-            from src.jwt_scanner.scanner import JWTScanner
+            # Import from jwt_scanner folder (already imported at top, but keeping for context)
             import inspect
 
             print("[+] Successfully imported JWTScanner")
-            
+
             # Inspect the JWTScanner __init__ signature
             sig = inspect.signature(JWTScanner.__init__)
             print(f"[*] JWTScanner __init__ signature: {sig}")
-            
+
             # Create a simple args object that JWTScanner expects
             class ScannerArgs:
                 pass
-            
+
             scanner_args = ScannerArgs()
             scanner_args.url = self.target
             scanner_args.protected_endpoint = self.protected_endpoint
@@ -443,15 +424,15 @@ class AuthHandler:
             scanner_args.admin_endpoint = self.admin_endpoint
             scanner_args.target_user = self.target_user
             scanner_args.token_location = self.token_location
-            
+
             # Try different initialization patterns based on the signature
             params = list(sig.parameters.keys())
-            
+
             if len(params) >= 2 and params[1] == 'url':
                 # Pattern: __init__(self, url, session, token, ...)
                 print("[*] Using pattern: JWTScanner(url, session, token)")
                 scanner = JWTScanner(self.target, session, jwt_token)
-                
+
                 # Set additional attributes if they exist
                 if hasattr(scanner, 'protected_endpoint'):
                     scanner.protected_endpoint = self.protected_endpoint
@@ -475,7 +456,7 @@ class AuthHandler:
                     scanner.target_user = self.target_user
                 if hasattr(scanner, 'token_location'):
                     scanner.token_location = self.token_location
-                    
+
             elif 'config' in params:
                 # Pattern: __init__(self, config, session, token)
                 print("[*] Using pattern: JWTScanner(config, session, token)")
@@ -494,7 +475,7 @@ class AuthHandler:
                 print("[WARN] JWTScanner object has no 'run' method")
                 print(f"[*] Scanner object type: {type(scanner)}")
                 print(f"[*] Available methods: {[m for m in dir(scanner) if not m.startswith('_')]}")
-                
+
                 # Try to find and call the main method if it exists
                 if hasattr(scanner, 'scan'):
                     scanner.scan()
@@ -517,35 +498,6 @@ class AuthHandler:
 
 
 if __name__ == "__main__":
-    # For direct script execution (not through Fire)
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Stateful Authentication Handler")
-    parser.add_argument('--login_url', help="Target Login URL")
-    parser.add_argument('--username', help="Username to inject")
-    parser.add_argument('--password', help="Password to inject")
-    parser.add_argument('--auth_type', required=True, choices=['form', 'basic', 'json', 'bearer'],
-                        help="Type of login mechanism")
-    parser.add_argument('--user_field', default='username', help="HTML name for username")
-    parser.add_argument('--pass_field', default='password', help="HTML name for password")
-    parser.add_argument('--csrf_field', default='csrf', help="HTML name for CSRF token")
-    parser.add_argument('--success_string', help="Text indicating successful login")
-    parser.add_argument('--token', help="Pre-existing bearer token (for bearer auth)")
-    parser.add_argument('--scan_mode', action='store_true', help="Enable JWT scanning mode")
-    parser.add_argument('--target', help="Target base URL for scanning")
-    parser.add_argument('--protected_endpoint', help="Protected endpoint requiring JWT")
-    parser.add_argument('--verbose', '-v', action='store_true', help="Enable verbose output")
-    
-    args = parser.parse_args()
-    
-    # Create handler and authenticate
-    handler = AuthHandler(**vars(args))
-    session, token = handler()
-    
-    if session:
-        print("\n[SUCCESS] Authentication completed successfully!")
-        if token:
-            print(f"[*] JWT Token: {token[:100]}...")
-    else:
-        print("\n[FAILED] Authentication failed!")
-        sys.exit(1)
+    # Direct execution using fire instead of argparse
+    import fire
+    fire.Fire(AuthHandler)
