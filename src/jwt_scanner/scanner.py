@@ -92,7 +92,7 @@ class JWTScanner:
             self.log(f"Request failed: {e}", "ERROR")
             return None
 
-    # --------------------- VULNERABILITY TESTS (UNCHANGED CONTENT) ---------------------
+    # --------------------- VULNERABILITY TESTS ---------------------
 
     def test_1_alg_none_bypass(self):
         """Try alg: none with original payload (if token exists) or with 'admin'/'administrator'"""
@@ -435,19 +435,19 @@ class JWTScanner:
         with open(self.output, 'w') as f:
             json.dump(report, f, indent=2)
         self.log(f"Report saved to {self.output}", "INFO")
-        print("\n" + "=" * 70)
+        print(f"\n{'=' * 70}")
         print("JWT SECURITY SCAN SUMMARY")
-        print("=" * 70)
+        print(f"{'=' * 70}")
         for r in self.results:
             status = "VULNERABLE" if r.get("vulnerable") else "SAFE"
             print(f"{r['vulnerability']:<45} {status}")
-        print("=" * 70)
+        print(f"{'=' * 70}")
         print(f"\nTotal Vulnerabilities Found: {vuln_count}/8")
 
     def run(self):
-        print("=" * 70)
+        print(f"{'=' * 70}")
         print("JWT SECURITY SCANNER v2.0 (Unified, Fully Implemented)")
-        print("=" * 70)
+        print(f"{'=' * 70}")
         
         if self.token:
             self.log(f"✓ Using provided JWT token: {self.token[:50]}...", "INFO")
