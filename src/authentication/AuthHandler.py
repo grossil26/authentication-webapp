@@ -13,8 +13,8 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Optional, Tuple
 
-# Simple relative import - assumes proper package structure
-from ..jwt_scanner.scanner import JWTScanner
+
+from src.jwt_scanner.scanner import JWTScanner
 
 
 class AuthHandler:
@@ -115,9 +115,9 @@ class AuthHandler:
     def __call__(self):
         """Execute the authentication flow."""
         mode_text = "AUTHENTICATION + JWT SCANNING" if self.scan_mode else "AUTHENTICATION ONLY"
-        print("\n" + "="*70)
+        print(f"\n{'=' * 70}")
         print(f"RUNNING IN {mode_text} MODE")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # Validate required parameters for authentication
         if not self.auth_type:
@@ -393,9 +393,9 @@ class AuthHandler:
 
     def _run_jwt_scanner(self, session, jwt_token):
         """Run the JWT scanner with the authenticated session and token."""
-        print("\n" + "="*70)
+        print(f"\n{'=' * 70}")
         print("STEP 2: LAUNCHING JWT SCANNER")
-        print("="*70)
+        print(f"{'=' * 70}")
 
         try:
             # Import from jwt_scanner folder (already imported at top, but keeping for context)
@@ -496,8 +496,3 @@ class AuthHandler:
                 import traceback
                 traceback.print_exc()
 
-
-if __name__ == "__main__":
-    # Direct execution using fire instead of argparse
-    import fire
-    fire.Fire(AuthHandler)
