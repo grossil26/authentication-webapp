@@ -1,8 +1,9 @@
-
 import fire
+import textwrap
 
 from src.authentication.AuthHandler import AuthHandler
 from src.oauth.oauth import OAuthToolkit
+
 
 class Tools:
     """
@@ -34,6 +35,9 @@ class Tools:
             --token         Pre-existing bearer token (for bearer auth)
             --verbose       Enable verbose output
         """
+        if kwargs.pop('help', False):
+            print(textwrap.dedent(self.auth.__doc__))
+            return
         handler = AuthHandler(scan_mode=False, **kwargs)
         return handler()
 
@@ -68,13 +72,24 @@ class Tools:
             --target_user        User to impersonate (default: administrator)
             --token_location     Where to send token (header, cookie, param, both)
         """
+        if kwargs.pop('help', False):
+            print(textwrap.dedent(self.jwt_scanner.__doc__))
+            return
         handler = AuthHandler(scan_mode=True, **kwargs)
         return handler()
 
-    def oauth_toolkit(self):
-        """OAuth testing toolkit."""
-        return OAuthToolkit
+    def oauth_toolkit(self, tool: str):
+        """
+        OAuth testing toolkit.
+
+        Args:
+            tool: Attack module to run. One of: implicit, redirect, state
+
+        Example:
+            uv run main.py oauth_toolkit --tool implicit
+        """
+        return OAuthToolkit(tool)()
+
 
 if __name__ == "__main__":
     fire.Fire(Tools)
-
