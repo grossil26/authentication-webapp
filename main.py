@@ -73,7 +73,7 @@ class Tools:
 
     def oauth_toolkit(self):
         """OAuth testing toolkit."""
-        return OAuthToolkit()
+        return OAuthToolkit
 
 if __name__ == "__main__":
     fire.Fire(Tools)
